@@ -1,240 +1,309 @@
-# ORB-SLAM2
-**Authors:** [Raul Mur-Artal](http://webdiis.unizar.es/~raulmur/), [Juan D. Tardos](http://webdiis.unizar.es/~jdtardos/), [J. M. M. Montiel](http://webdiis.unizar.es/~josemari/) and [Dorian Galvez-Lopez](http://doriangalvez.com/) ([DBoW2](https://github.com/dorian3d/DBoW2))
+# ORB-SLAM2 with Semantic Segmentation
 
-**13 Jan 2017**: OpenCV 3 and Eigen 3.3 are now supported.
+## 环境准备
 
-**22 Dec 2016**: Added AR demo (see section 7).
+参考原项目：<https://github.com/raulmur/ORB_SLAM2#2-prerequisites>
 
-ORB-SLAM2 is a real-time SLAM library for **Monocular**, **Stereo** and **RGB-D** cameras that computes the camera trajectory and a sparse 3D reconstruction (in the stereo and RGB-D case with true scale). It is able to detect loops and relocalize the camera in real time. We provide examples to run the SLAM system in the [KITTI dataset](http://www.cvlibs.net/datasets/kitti/eval_odometry.php) as stereo or monocular, in the [TUM dataset](http://vision.in.tum.de/data/datasets/rgbd-dataset) as RGB-D or monocular, and in the [EuRoC dataset](http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets) as stereo or monocular. We also provide a ROS node to process live monocular, stereo or RGB-D streams. **The library can be compiled without ROS**. ORB-SLAM2 provides a GUI to change between a *SLAM Mode* and *Localization Mode*, see section 9 of this document.
+### Pangolin 版本问题
 
-<a href="https://www.youtube.com/embed/ufvPS5wJAx0" target="_blank"><img src="http://img.youtube.com/vi/ufvPS5wJAx0/0.jpg" 
-alt="ORB-SLAM2" width="240" height="180" border="10" /></a>
-<a href="https://www.youtube.com/embed/T-9PYCKhDLM" target="_blank"><img src="http://img.youtube.com/vi/T-9PYCKhDLM/0.jpg" 
-alt="ORB-SLAM2" width="240" height="180" border="10" /></a>
-<a href="https://www.youtube.com/embed/kPwy8yA4CKM" target="_blank"><img src="http://img.youtube.com/vi/kPwy8yA4CKM/0.jpg" 
-alt="ORB-SLAM2" width="240" height="180" border="10" /></a>
+ORB_SLAM2 项目需要使用 Pangolin 0.5 版本，直接从仓库 clone 将得到最新版本，使用时会有冲突。可以通过以下方法下载特定版本：
 
-
-### Related Publications:
-
-[Monocular] Raúl Mur-Artal, J. M. M. Montiel and Juan D. Tardós. **ORB-SLAM: A Versatile and Accurate Monocular SLAM System**. *IEEE Transactions on Robotics,* vol. 31, no. 5, pp. 1147-1163, 2015. (**2015 IEEE Transactions on Robotics Best Paper Award**). **[PDF](http://webdiis.unizar.es/~raulmur/MurMontielTardosTRO15.pdf)**.
-
-[Stereo and RGB-D] Raúl Mur-Artal and Juan D. Tardós. **ORB-SLAM2: an Open-Source SLAM System for Monocular, Stereo and RGB-D Cameras**. *IEEE Transactions on Robotics,* vol. 33, no. 5, pp. 1255-1262, 2017. **[PDF](https://128.84.21.199/pdf/1610.06475.pdf)**.
-
-[DBoW2 Place Recognizer] Dorian Gálvez-López and Juan D. Tardós. **Bags of Binary Words for Fast Place Recognition in Image Sequences**. *IEEE Transactions on Robotics,* vol. 28, no. 5, pp.  1188-1197, 2012. **[PDF](http://doriangalvez.com/php/dl.php?dlp=GalvezTRO12.pdf)**
-
-# 1. License
-
-ORB-SLAM2 is released under a [GPLv3 license](https://github.com/raulmur/ORB_SLAM2/blob/master/License-gpl.txt). For a list of all code/library dependencies (and associated licenses), please see [Dependencies.md](https://github.com/raulmur/ORB_SLAM2/blob/master/Dependencies.md).
-
-For a closed-source version of ORB-SLAM2 for commercial purposes, please contact the authors: orbslam (at) unizar (dot) es.
-
-If you use ORB-SLAM2 (Monocular) in an academic work, please cite:
-
-    @article{murTRO2015,
-      title={{ORB-SLAM}: a Versatile and Accurate Monocular {SLAM} System},
-      author={Mur-Artal, Ra\'ul, Montiel, J. M. M. and Tard\'os, Juan D.},
-      journal={IEEE Transactions on Robotics},
-      volume={31},
-      number={5},
-      pages={1147--1163},
-      doi = {10.1109/TRO.2015.2463671},
-      year={2015}
-     }
-
-if you use ORB-SLAM2 (Stereo or RGB-D) in an academic work, please cite:
-
-    @article{murORB2,
-      title={{ORB-SLAM2}: an Open-Source {SLAM} System for Monocular, Stereo and {RGB-D} Cameras},
-      author={Mur-Artal, Ra\'ul and Tard\'os, Juan D.},
-      journal={IEEE Transactions on Robotics},
-      volume={33},
-      number={5},
-      pages={1255--1262},
-      doi = {10.1109/TRO.2017.2705103},
-      year={2017}
-     }
-
-# 2. Prerequisites
-We have tested the library in **Ubuntu 12.04**, **14.04** and **16.04**, but it should be easy to compile in other platforms. A powerful computer (e.g. i7) will ensure real-time performance and provide more stable and accurate results.
-
-## C++11 or C++0x Compiler
-We use the new thread and chrono functionalities of C++11.
-
-## Pangolin
-We use [Pangolin](https://github.com/stevenlovegrove/Pangolin) for visualization and user interface. Dowload and install instructions can be found at: https://github.com/stevenlovegrove/Pangolin.
-
-## OpenCV
-We use [OpenCV](http://opencv.org) to manipulate images and features. Dowload and install instructions can be found at: http://opencv.org. **Required at leat 2.4.3. Tested with OpenCV 2.4.11 and OpenCV 3.2**.
-
-## Eigen3
-Required by g2o (see below). Download and install instructions can be found at: http://eigen.tuxfamily.org. **Required at least 3.1.0**.
-
-## DBoW2 and g2o (Included in Thirdparty folder)
-We use modified versions of the [DBoW2](https://github.com/dorian3d/DBoW2) library to perform place recognition and [g2o](https://github.com/RainerKuemmerle/g2o) library to perform non-linear optimizations. Both modified libraries (which are BSD) are included in the *Thirdparty* folder.
-
-## ROS (optional)
-We provide some examples to process the live input of a monocular, stereo or RGB-D camera using [ROS](ros.org). Building these examples is optional. In case you want to use ROS, a version Hydro or newer is needed.
-
-# 3. Building ORB-SLAM2 library and examples
-
-Clone the repository:
+```bash
+git clone --recursive https://github.com/stevenlovegrove/Pangolin.git -b v0.5
 ```
+
+或者在 release 界面手动下载：<https://github.com/stevenlovegrove/Pangolin/releases/tag/v0.5>
+
+之后正常编译安装即可。
+
+### OpenCV 版本问题
+
+ORB_SLAM2 只在 OpenCV 2.4.11 and OpenCV 3.2 版本上测试过。为使用 OpenCV 的新特性，本版本采用了 OpenCV 4.2.0 版本，后续会对相应函数接口进行修改。
+
+## 编译安装
+
+原始版本的 ORB_SLAM2 编译方法如下：
+
+```bash
 git clone https://github.com/raulmur/ORB_SLAM2.git ORB_SLAM2
-```
-
-We provide a script `build.sh` to build the *Thirdparty* libraries and *ORB-SLAM2*. Please make sure you have installed all required dependencies (see section 2). Execute:
-```
 cd ORB_SLAM2
 chmod +x build.sh
 ./build.sh
 ```
 
-This will create **libORB_SLAM2.so**  at *lib* folder and the executables **mono_tum**, **mono_kitti**, **rgbd_tum**, **stereo_kitti**, **mono_euroc** and **stereo_euroc** in *Examples* folder.
+### CMakeLists.txt 的修改
 
-# 4. Monocular Examples
+1. 若使用了不同版本的 OpenCV，需要将 CMakeLists.txt 中的 `find_package(OpenCV $OPENCV_VERSION QUIET)` 修改为对应版本。
+2. 经测试，使用 `-march=native` 指令优化编译，会导致重复编译后运行时出现错误。目前解决方案是将主目录和 Thirdparty/ 下的 CMakeLists.txt 中的对应指令注释掉。
+3. 该版本只对 Monocular 模式进行测试，使用的是 KITTI 数据集，因此可注释掉除了 `Examples/Monocular/mono_kitti.cc` 之外的测试用例的编译。
 
-## TUM Dataset
+### Eigen 内存分配器问题
 
-1. Download a sequence from http://vision.in.tum.de/data/datasets/rgbd-dataset/download and uncompress it.
+在编译时可能会出现 `static assertion failed` 错误，需要将 `include/LoopClosing.h` 中的
 
-2. Execute the following command. Change `TUMX.yaml` to TUM1.yaml,TUM2.yaml or TUM3.yaml for freiburg1, freiburg2 and freiburg3 sequences respectively. Change `PATH_TO_SEQUENCE_FOLDER`to the uncompressed sequence folder.
-```
-./Examples/Monocular/mono_tum Vocabulary/ORBvoc.txt Examples/Monocular/TUMX.yaml PATH_TO_SEQUENCE_FOLDER
-```
-
-## KITTI Dataset  
-
-1. Download the dataset (grayscale images) from http://www.cvlibs.net/datasets/kitti/eval_odometry.php 
-
-2. Execute the following command. Change `KITTIX.yaml`by KITTI00-02.yaml, KITTI03.yaml or KITTI04-12.yaml for sequence 0 to 2, 3, and 4 to 12 respectively. Change `PATH_TO_DATASET_FOLDER` to the uncompressed dataset folder. Change `SEQUENCE_NUMBER` to 00, 01, 02,.., 11. 
-```
-./Examples/Monocular/mono_kitti Vocabulary/ORBvoc.txt Examples/Monocular/KITTIX.yaml PATH_TO_DATASET_FOLDER/dataset/sequences/SEQUENCE_NUMBER
+```c++
+typedef map<KeyFrame*,g2o::Sim3,std::less<KeyFrame*>,
+    Eigen::aligned_allocator<std::pair<const KeyFrame*, g2o::Sim3> > > KeyFrameAndPose;
 ```
 
-## EuRoC Dataset
+修改成：
 
-1. Download a sequence (ASL format) from http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets
-
-2. Execute the following first command for V1 and V2 sequences, or the second command for MH sequences. Change PATH_TO_SEQUENCE_FOLDER and SEQUENCE according to the sequence you want to run.
-```
-./Examples/Monocular/mono_euroc Vocabulary/ORBvoc.txt Examples/Monocular/EuRoC.yaml PATH_TO_SEQUENCE_FOLDER/mav0/cam0/data Examples/Monocular/EuRoC_TimeStamps/SEQUENCE.txt 
+```c++
+typedef map<KeyFrame*,g2o::Sim3,std::less<KeyFrame*>,
+    Eigen::aligned_allocator<std::pair<KeyFrame *const, g2o::Sim3> > > KeyFrameAndPose;
 ```
 
+### OpenCV 库的引用
+
+OpenCV 的的部分函数命名和路径有改动，需要进行以下修改：
+
+1. 在 `include/FrameDrawer.h` 中添加头文件：`#include <opencv2/imgproc/types_c.h>`
+2. 将 Examples/ 下需要编译的文件中的 `CV_LOAD_IMAGE_UNCHANGED` 更换成 `cv::IMREAD_UNCHANGED`
+
+### C++ 标准函数库的引用
+
+可能是由于编译时的 C++ 版本问题，需要在调用了 `usleep()` 函数的文件中添加头文件：`#include <unistd.h>`
+
+## 在建图中加入语义信息
+
+### 语义信息获取
+
+数据文件目录如下：
+
+```bash
+dataset
+│   times.txt    
+│
+└───image_02
+│   │   000000.png
+│   │   000001.png
+│   │   ...
+│   
+└───seg_result
+    │   000000.png
+    │   000001.png
+    │   ...
 ```
-./Examples/Monocular/mono_euroc Vocabulary/ORBvoc.txt Examples/Monocular/EuRoC.yaml PATH_TO_SEQUENCE/cam0/data Examples/Monocular/EuRoC_TimeStamps/SEQUENCE.txt 
-```
 
-# 5. Stereo Examples
+语义分割模型使用 [da-sac](https://github.com/visinf/da-sac)，将 `image_02/` 中的图片处理后，将带 Label 信息的图片存入 `seg_result/` 文件夹中。`times.txt` 文件中的每一行对应图片拍摄时间，单位为秒。
 
-## KITTI Dataset
+可采用自定义数据集，或者下载 KITTI 数据集，参考：<https://github.com/raulmur/ORB_SLAM2#kitti-dataset>
 
-1. Download the dataset (grayscale images) from http://www.cvlibs.net/datasets/kitti/eval_odometry.php 
+### 添加语义信息接口
 
-2. Execute the following command. Change `KITTIX.yaml`to KITTI00-02.yaml, KITTI03.yaml or KITTI04-12.yaml for sequence 0 to 2, 3, and 4 to 12 respectively. Change `PATH_TO_DATASET_FOLDER` to the uncompressed dataset folder. Change `SEQUENCE_NUMBER` to 00, 01, 02,.., 11. 
-```
-./Examples/Stereo/stereo_kitti Vocabulary/ORBvoc.txt Examples/Stereo/KITTIX.yaml PATH_TO_DATASET_FOLDER/dataset/sequences/SEQUENCE_NUMBER
-```
+以 Monocular 为例，对程序进行修改：
 
-## EuRoC Dataset
+1. 将 `src/System.cc` 文件中的
 
-1. Download a sequence (ASL format) from http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets
+    ```c++
+    cv::Mat Tcw = mpTracker->GrabImageMonocular(im,timestamp);
+    ```
 
-2. Execute the following first command for V1 and V2 sequences, or the second command for MH sequences. Change PATH_TO_SEQUENCE_FOLDER and SEQUENCE according to the sequence you want to run.
-```
-./Examples/Stereo/stereo_euroc Vocabulary/ORBvoc.txt Examples/Stereo/EuRoC.yaml PATH_TO_SEQUENCE/mav0/cam0/data PATH_TO_SEQUENCE/mav0/cam1/data Examples/Stereo/EuRoC_TimeStamps/SEQUENCE.txt
-```
-```
-./Examples/Stereo/stereo_euroc Vocabulary/ORBvoc.txt Examples/Stereo/EuRoC.yaml PATH_TO_SEQUENCE/cam0/data PATH_TO_SEQUENCE/cam1/data Examples/Stereo/EuRoC_TimeStamps/SEQUENCE.txt
-```
+    修改为：
 
-# 6. RGB-D Example
+    ```c++
+    cv::Mat Tcw = mpTracker->GrabImageMonocular(im, timestamp, mImseg); 
+    ```
 
-## TUM Dataset
+    其中 mImseg 为传入的语义信息图片。
 
-1. Download a sequence from http://vision.in.tum.de/data/datasets/rgbd-dataset/download and uncompress it.
+2. 修改 `src/Tracking.cc` 中的 `GrabImageMonocular()` 函数定义，形参列表修改为：
 
-2. Associate RGB images and depth images using the python script [associate.py](http://vision.in.tum.de/data/datasets/rgbd-dataset/tools). We already provide associations for some of the sequences in *Examples/RGB-D/associations/*. You can generate your own associations file executing:
+    ```c++
+    cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp, const cv::Mat &imSeg)
+    ```
 
-  ```
-  python associate.py PATH_TO_SEQUENCE/rgb.txt PATH_TO_SEQUENCE/depth.txt > associations.txt
-  ```
+    同时在 `Track()` 函数后添加语义信息处理：
 
-3. Execute the following command. Change `TUMX.yaml` to TUM1.yaml,TUM2.yaml or TUM3.yaml for freiburg1, freiburg2 and freiburg3 sequences respectively. Change `PATH_TO_SEQUENCE_FOLDER`to the uncompressed sequence folder. Change `ASSOCIATIONS_FILE` to the path to the corresponding associations file.
+    ```c++
+    if (mState == OK)
+        UpdateSemantic_cor(mImSeg); 
+    ```
 
-  ```
-  ./Examples/RGB-D/rgbd_tum Vocabulary/ORBvoc.txt Examples/RGB-D/TUMX.yaml PATH_TO_SEQUENCE_FOLDER ASSOCIATIONS_FILE
-  ```
+    其中，新增的 `UpdateSemantic_cor()` 函数定义如下：
 
-# 7. ROS Examples
+    ```c++
+    void Tracking::UpdateSemantic_cor(const cv::Mat &imSeg)
+    {
+        cv::Mat im;
+        im = imSeg;
+        const int N=mCurrentFrame.N;
+        for(int i=0; i<N; i++)
+        {
+            MapPoint* pMP = mCurrentFrame.mvpMapPoints[i];
+            if(pMP)
+            {
+                int nKpX = (int)(mCurrentFrame.mvKeysUn[i].pt.x);
+                int nKpY = (int)(mCurrentFrame.mvKeysUn[i].pt.y);
+                int ucSemanticLabel = int(mImSeg.at<uchar >(nKpY, nKpX));
+                pMP->UpdateSemantic(ucSemanticLabel);
+            }
+        }
+    }
+    ```
 
-### Building the nodes for mono, monoAR, stereo and RGB-D
-1. Add the path including *Examples/ROS/ORB_SLAM2* to the ROS_PACKAGE_PATH environment variable. Open .bashrc file and add at the end the following line. Replace PATH by the folder where you cloned ORB_SLAM2:
+3. 在 `src/MapPoint.cc` 中新增 `UpdateSemantic()` 与 `GetSemanticLabel()` 函数：
 
-  ```
-  export ROS_PACKAGE_PATH=${ROS_PACKAGE_PATH}:PATH/ORB_SLAM2/Examples/ROS
-  ```
+    ```c++
+    void MapPoint::UpdateSemantic(const unsigned int nSemanticLabel)
+    {
+        if(nSemanticLabel==0||nSemanticLabel==13||nSemanticLabel==2||nSemanticLabel==3||nSemanticLabel==4||nSemanticLabel==8)
+            mvSemanticLabels[nSemanticLabel]++;
+        else
+            mvSemanticLabels[nSemanticLabel]=0;
+
+        vector<long unsigned int>::iterator vitMaxLabel = max_element(mvSemanticLabels.begin(), mvSemanticLabels.end());
+        
+        if (*vitMaxLabel == 0)
+        {
+            mnLabel = -1;
+        }
+        else if (mnLabel == -1 || *vitMaxLabel > mvSemanticLabels[mnLabel])
+        {
+            mnLabel = vitMaxLabel - mvSemanticLabels.begin();
+            cout << "Label: " << mnLabel << endl;
+        }
+    }
+
+    int MapPoint::GetSemanticLabel()
+    {
+        return mnLabel;
+    }
+    ```
+
+4. 在 `src/MapDrawer.cc` 中，修改 `DrawMapPoints()` 函数为：
+
+    ```c++
+    void MapDrawer::DrawMapPoints()
+    {
+        const vector<MapPoint*> &vpMPs = mpMap->GetAllMapPoints();
+        const vector<MapPoint*> &vpRefMPs = mpMap->GetReferenceMapPoints();
+
+        set<MapPoint*> spRefMPs(vpRefMPs.begin(), vpRefMPs.end());
+
+        if(vpMPs.empty())
+            return;
+
+        glPointSize(mPointSize);
+        glBegin(GL_POINTS);
+        glColor3f(0.0,0.0,0.0);
+
+        for(size_t i=0, iend=vpMPs.size(); i<iend;i++)
+        {
+            if(vpMPs[i]->isBad() || spRefMPs.count(vpMPs[i]))
+                continue;
+            int nLabel = vpMPs[i]->GetSemanticLabel();
+            if (nLabel == -1)  // no label
+            {
+                glColor3f(0., 0., 0.);
+            }
+            else
+            {
+                glColor3f((float)mvColorMap[nLabel][0]/255., (float)mvColorMap[nLabel][1]/255., (float)mvColorMap[nLabel][2]/255.);
+            }
+            cv::Mat pos = vpMPs[i]->GetWorldPos();
+            glVertex3f(pos.at<float>(0),pos.at<float>(1),pos.at<float>(2));
+        }
+        glEnd();
+    }
+    ```
+
+    其中，`mvColorMap` 的定义为：
+
+    ```c++
+    vector<vector<int> > MapDrawer::mvColorMap
+    {
+        {128,  64,128},      //  0. road
+        {244,  35,232},      //  1. sidewalk
+        { 70,  70, 70},      //  2. building
+        {102, 102,156},      //  3. wall
+        {190, 153,153},      //  4. fence
+        {153, 153,153},      //  5. pole
+        {250, 170, 30},      //  6. traffic light
+        {220, 220,  0},      //  7. traffic sign
+        {107, 142, 35},      //  8. vegetation
+        {152, 251,152},      //  9. terrain
+        { 70, 130,180},      // 10. sky
+        {220, 20,  60},      // 11. person
+        {255,  0,   0},      // 12. rider
+        {  0,  0, 142},      // 13. car
+        {  0,  0,  70},      // 14. truck
+        {  0, 60, 100},      // 15. bus
+        {  0, 80, 100},      // 16. train
+        {  0,  0, 230},      // 17. motorcycle
+        {119, 11,  32}       // 18. bicycle
+    };
+    ```
   
-2. Execute `build_ros.sh` script:
+5. 在 `Examples/Monocular/mono_kitti.cc` 中，在 `main()` 中添加声明：
 
-  ```
-  chmod +x build_ros.sh
-  ./build_ros.sh
-  ```
+    ```c++
+    vector<string> vstrSemanticImage;
+    ```
+
+    并修改图像加载语句为：
+
+    ```c++
+    LoadImages(string(argv[3]), vstrImageFilenames, vstrSemanticImage, vTimestamps);
+    ```
+
+    修改 SLAM 运行的语句为：
+
+    ```c++
+    SLAM.TrackMonocular(im, tframe, imSeg);
+    ```
+
+    其中，的定义为：
+
+    ```c++
+    void LoadImages(const string &strPathToSequence, vector<string> &vstrImageFilenames, vector<string> &vstrSemanticImage, vector<double> &vTimestamps)
+    {
+        ifstream fTimes;
+        string strPathTimeFile = strPathToSequence + "/times.txt";
+        fTimes.open(strPathTimeFile.c_str());
+        while(!fTimes.eof())
+        {
+            string s;
+            getline(fTimes,s);
+            if(!s.empty())
+            {
+                stringstream ss;
+                ss << s;
+                double t;
+                ss >> t;
+                vTimestamps.push_back(t);
+            }
+        }
+
+        string strPrefixLeft = strPathToSequence + "/image_2/";
+        string strSemantic=strPathToSequence + "/seg_result/";
+
+        const int nTimes = vTimestamps.size();
+        vstrImageFilenames.resize(nTimes);
+        vstrSemanticImage.resize(nTimes);
+        
+        for(int i=0; i<nTimes; i++)
+        {
+            stringstream ss;
+            ss << setfill('0') << setw(6) << i;
+            vstrImageFilenames[i] = strPrefixLeft + ss.str() + ".png";
+            vstrSemanticImage[i] = strSemantic + ss.str() + ".png";
+        }
+    }
+    ```
+
+## 程序运行
+
+运行方法为：
   
-### Running Monocular Node
-For a monocular input from topic `/camera/image_raw` run node ORB_SLAM2/Mono. You will need to provide the vocabulary file and a settings file. See the monocular examples above.
+```bash
+./Examples/Monocular/mono_kitti \
+./Vocabulary/ORBvoc.txt \
+./Examples/Monocular/KITTI00-02.yaml \
+./dataset
+```
 
-  ```
-  rosrun ORB_SLAM2 Mono PATH_TO_VOCABULARY PATH_TO_SETTINGS_FILE
-  ```
-  
-### Running Monocular Augmented Reality Demo
-This is a demo of augmented reality where you can use an interface to insert virtual cubes in planar regions of the scene.
-The node reads images from topic `/camera/image_raw`.
+若采用了自定义数据集，则要使用包含对应参数的 yaml 文件。
+运行结果如下，左边为包含了语义信息的点云，右边为原始图像和关键帧。
 
-  ```
-  rosrun ORB_SLAM2 MonoAR PATH_TO_VOCABULARY PATH_TO_SETTINGS_FILE
-  ```
-  
-### Running Stereo Node
-For a stereo input from topic `/camera/left/image_raw` and `/camera/right/image_raw` run node ORB_SLAM2/Stereo. You will need to provide the vocabulary file and a settings file. If you **provide rectification matrices** (see Examples/Stereo/EuRoC.yaml example), the node will recitify the images online, **otherwise images must be pre-rectified**.
-
-  ```
-  rosrun ORB_SLAM2 Stereo PATH_TO_VOCABULARY PATH_TO_SETTINGS_FILE ONLINE_RECTIFICATION
-  ```
-  
-**Example**: Download a rosbag (e.g. V1_01_easy.bag) from the EuRoC dataset (http://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets). Open 3 tabs on the terminal and run the following command at each tab:
-  ```
-  roscore
-  ```
-  
-  ```
-  rosrun ORB_SLAM2 Stereo Vocabulary/ORBvoc.txt Examples/Stereo/EuRoC.yaml true
-  ```
-  
-  ```
-  rosbag play --pause V1_01_easy.bag /cam0/image_raw:=/camera/left/image_raw /cam1/image_raw:=/camera/right/image_raw
-  ```
-  
-Once ORB-SLAM2 has loaded the vocabulary, press space in the rosbag tab. Enjoy!. Note: a powerful computer is required to run the most exigent sequences of this dataset.
-
-### Running RGB_D Node
-For an RGB-D input from topics `/camera/rgb/image_raw` and `/camera/depth_registered/image_raw`, run node ORB_SLAM2/RGBD. You will need to provide the vocabulary file and a settings file. See the RGB-D example above.
-
-  ```
-  rosrun ORB_SLAM2 RGBD PATH_TO_VOCABULARY PATH_TO_SETTINGS_FILE
-  ```
-  
-# 8. Processing your own sequences
-You will need to create a settings file with the calibration of your camera. See the settings file provided for the TUM and KITTI datasets for monocular, stereo and RGB-D cameras. We use the calibration model of OpenCV. See the examples to learn how to create a program that makes use of the ORB-SLAM2 library and how to pass images to the SLAM system. Stereo input must be synchronized and rectified. RGB-D input must be synchronized and depth registered.
-
-# 9. SLAM and Localization Modes
-You can change between the *SLAM* and *Localization mode* using the GUI of the map viewer.
-
-### SLAM Mode
-This is the default mode. The system runs in parallal three threads: Tracking, Local Mapping and Loop Closing. The system localizes the camera, builds new map and tries to close loops.
-
-### Localization Mode
-This mode can be used when you have a good map of your working area. In this mode the Local Mapping and Loop Closing are deactivated. The system localizes the camera in the map (which is no longer updated), using relocalization if needed. 
-
+![ORB_SLAM2带语义信息运行结果](image/README/example_result.png) 
