@@ -18,7 +18,7 @@ git clone --recursive https://github.com/stevenlovegrove/Pangolin.git -b v0.5
 
 ### OpenCV 版本问题
 
-ORB_SLAM2 只在 OpenCV 2.4.11 and OpenCV 3.2 版本上测试过。为使用 OpenCV 的新特性，本版本采用了 OpenCV 4.2.0 版本，后续会对相应函数接口进行修改。
+ORB_SLAM2 只在 OpenCV 2.4.11 和 OpenCV 3.2 版本上经过测试。为使用 OpenCV 的新特性，本版本采用了 OpenCV 4.2.0 版本，后续会对相应函数接口进行修改。
 
 ## 编译安装
 
@@ -46,7 +46,7 @@ typedef map<KeyFrame*,g2o::Sim3,std::less<KeyFrame*>,
     Eigen::aligned_allocator<std::pair<const KeyFrame*, g2o::Sim3> > > KeyFrameAndPose;
 ```
 
-修改成：
+修改为：
 
 ```c++
 typedef map<KeyFrame*,g2o::Sim3,std::less<KeyFrame*>,
@@ -55,14 +55,14 @@ typedef map<KeyFrame*,g2o::Sim3,std::less<KeyFrame*>,
 
 ### OpenCV 库的引用
 
-OpenCV 的的部分函数命名和路径有改动，需要进行以下修改：
+OpenCV 的部分函数命名和路径相比旧版本有改动，需要进行以下修改：
 
 1. 在 `include/FrameDrawer.h` 中添加头文件：`#include <opencv2/imgproc/types_c.h>`
 2. 将 Examples/ 下需要编译的文件中的 `CV_LOAD_IMAGE_UNCHANGED` 更换成 `cv::IMREAD_UNCHANGED`
 
 ### C++ 标准函数库的引用
 
-可能是由于编译时的 C++ 版本问题，需要在调用了 `usleep()` 函数的文件中添加头文件：`#include <unistd.h>`
+可能与编译时的 C++ 版本相关，需要在调用了 `usleep()` 函数的文件中添加头文件：`#include <unistd.h>`
 
 ## 在建图中加入语义信息
 
@@ -85,13 +85,13 @@ dataset
     │   ...
 ```
 
-语义分割模型使用 [da-sac](https://github.com/visinf/da-sac)，将 `image_02/` 中的图片处理后，将带 Label 信息的图片存入 `seg_result/` 文件夹中。`times.txt` 文件中的每一行对应图片拍摄时间，单位为秒。
+语义分割模型使用 [da-sac](https://github.com/visinf/da-sac)，对 `image_02/` 中的图片进行语义分割处理后，将带 Label 信息的图片存入 `seg_result/` 文件夹中。`times.txt` 文件中的每一行对应图片拍摄时间，单位为秒。
 
 可采用自定义数据集，或者下载 KITTI 数据集，参考：<https://github.com/raulmur/ORB_SLAM2#kitti-dataset>
 
 ### 添加语义信息接口
 
-以 Monocular 为例，对程序进行修改：
+以 Monocular 为例，对代码进行修改，注意保持与头文件的匹配：
 
 1. 将 `src/System.cc` 文件中的
 
@@ -253,7 +253,7 @@ dataset
     SLAM.TrackMonocular(im, tframe, imSeg);
     ```
 
-    其中，的定义为：
+    其中，`LoadImages()` 的定义修改为：
 
     ```c++
     void LoadImages(const string &strPathToSequence, vector<string> &vstrImageFilenames, vector<string> &vstrSemanticImage, vector<double> &vTimestamps)
