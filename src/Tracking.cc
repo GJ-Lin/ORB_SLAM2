@@ -37,16 +37,35 @@
 
 #include<mutex>
 
+#include <unistd.h> // fix timer bug lgj
+#include <Frame.h> // change 12/17 lgj
 
 using namespace std;
 
 namespace ORB_SLAM2
 {
 
-Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer, MapDrawer *pMapDrawer, Map *pMap, KeyFrameDatabase* pKFDB, const string &strSettingPath, const int sensor):
-    mState(NO_IMAGES_YET), mSensor(sensor), mbOnlyTracking(false), mbVO(false), mpORBVocabulary(pVoc),
-    mpKeyFrameDB(pKFDB), mpInitializer(static_cast<Initializer*>(NULL)), mpSystem(pSys), mpViewer(NULL),
-    mpFrameDrawer(pFrameDrawer), mpMapDrawer(pMapDrawer), mpMap(pMap), mnLastRelocFrameId(0)
+Tracking::Tracking(System *pSys, 
+                   ORBVocabulary* pVoc, 
+                   FrameDrawer *pFrameDrawer, 
+                   MapDrawer *pMapDrawer, 
+                   Map *pMap, 
+                   KeyFrameDatabase* pKFDB, 
+                   const string &strSettingPath, 
+                   const int sensor):
+                   mState(NO_IMAGES_YET), 
+                   mSensor(sensor), 
+                   mbOnlyTracking(false), 
+                   mbVO(false), 
+                   mpORBVocabulary(pVoc),
+                   mpKeyFrameDB(pKFDB), 
+                   mpInitializer(static_cast<Initializer*>(NULL)), 
+                   mpSystem(pSys), 
+                   mpViewer(NULL),
+                   mpFrameDrawer(pFrameDrawer), 
+                   mpMapDrawer(pMapDrawer), 
+                   mpMap(pMap), 
+                   mnLastRelocFrameId(0)
 {
     // Load camera parameters from settings file
 
@@ -235,9 +254,14 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const d
 }
 
 
-cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
+// cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
+cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp, const cv::Mat &imSeg)//imseg传入的是灰度图 // change 12/17 lgj
 {
     mImGray = im;
+    imSeg.copyTo(mImSeg); // change 12/17 lgj
+    // cout << im.size() << endl;
+    // cout << imSeg.size() << endl;
+    // exit(0);
 
     if(mImGray.channels()==3)
     {
@@ -260,6 +284,11 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
         mCurrentFrame = Frame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
 
     Track();
+    if (mState == OK) // change begin 12/17 lgj
+    {
+        UpdateSemantic_cor(mImSeg); //此处调用了函数
+        // cout << "after UpdateSemantic" << endl;
+    } // change end 12/17 lgj
 
     return mCurrentFrame.mTcw.clone();
 }
@@ -505,6 +534,50 @@ void Tracking::Track()
 
 }
 
+// change begin 12/17 lgj
+void Tracking::UpdateSemantic_cor(const cv::Mat &imSeg)//关键点的坐标
+{
+    cv::Mat im;
+    im = imSeg;
+    // cout << imSeg.rows << " " << imSeg.cols << endl;
+    // exit(0);
+    // cout << "Update 1" << endl;
+    // int a;
+    // int b;
+    const int N=mCurrentFrame.N;
+    // cout << "Update 2: " << N << endl;
+
+    for(int i=0; i<N; i++)
+    {
+        // cout << "Update i: " << i << '/' << N << endl;
+        MapPoint* pMP = mCurrentFrame.mvpMapPoints[i];//mvpMapPoints[i]与关键帧对应的地图点
+
+        // cout << "Update 3: " << mCurrentFrame.mvpMapPoints[i] << endl;
+        if(pMP)
+        {
+            // cout << "in pMP 1" << i << '/' << N << endl;
+            int nKpX = (int)(mCurrentFrame.mvKeysUn[i].pt.x);
+            // cout << "in pMP 2" << endl;
+            int nKpY = (int)(mCurrentFrame.mvKeysUn[i].pt.y);
+            // cout << "in pMP 3" << endl;
+            // cout << nKpX << " " << nKpY << endl;
+            // cout << imSeg.rows << " " << imSeg.cols << endl;
+            // cout << mImSeg.rows << " " << mImSeg.cols << endl;
+            // cv::imshow("显示图片", imSeg);
+            // exit(0);
+            int ucSemanticLabel = int(mImSeg.at<uchar >(nKpY, nKpX));
+            if (ucSemanticLabel >= 19) // TODO change
+                ucSemanticLabel = 0;
+            // cout << "Update 4" << endl;
+            // cout << "label: " << int(ucSemanticLabel) << endl;
+            pMP->UpdateSemantic(ucSemanticLabel);
+        }
+
+    }
+    // cout << "Update 5" << endl;
+//    cout<<"total keypoints in current frame"<<N<<endl;
+}
+// change end 12/17 lgj
 
 void Tracking::StereoInitialization()
 {

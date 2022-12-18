@@ -23,6 +23,8 @@
 
 #include <mutex>
 
+#include <unistd.h> // fix timer bug lgj
+
 namespace ORB_SLAM2
 {
 

@@ -29,9 +29,15 @@
 namespace ORB_SLAM2
 {
 
-System::System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor,
-               const bool bUseViewer):mSensor(sensor), mpViewer(static_cast<Viewer*>(NULL)), mbReset(false),mbActivateLocalizationMode(false),
-        mbDeactivateLocalizationMode(false)
+System::System(const string &strVocFile, 
+               const string &strSettingsFile, 
+               const eSensor sensor,
+               const bool bUseViewer):
+               mSensor(sensor), 
+               mpViewer(static_cast<Viewer*>(NULL)), 
+               mbReset(false),
+               mbActivateLocalizationMode(false),
+               mbDeactivateLocalizationMode(false)
 {
     // Output welcome message
     cout << endl <<
@@ -215,14 +221,20 @@ cv::Mat System::TrackRGBD(const cv::Mat &im, const cv::Mat &depthmap, const doub
     return Tcw;
 }
 
-cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
+// cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
+cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp, const cv::Mat &mImseg)//在此处添加了imseg的接口 // change 12/17 lgj
 {
+    // cout << im.size() << endl;
+    // cout << mImseg.size() << endl;
+    // exit(0);
+    // cout << "System::TrackMonocular 1" << endl;
     if(mSensor!=MONOCULAR)
     {
         cerr << "ERROR: you called TrackMonocular but input sensor was not set to Monocular." << endl;
         exit(-1);
     }
 
+    // cout << "System::TrackMonocular 2" << endl;
     // Check mode change
     {
         unique_lock<mutex> lock(mMutexMode);
@@ -247,6 +259,7 @@ cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
         }
     }
 
+    // cout << "System::TrackMonocular 3" << endl;
     // Check reset
     {
     unique_lock<mutex> lock(mMutexReset);
@@ -257,8 +270,11 @@ cv::Mat System::TrackMonocular(const cv::Mat &im, const double &timestamp)
     }
     }
 
-    cv::Mat Tcw = mpTracker->GrabImageMonocular(im,timestamp);
+    // cout << "System::TrackMonocular 4" << endl;
+    // cv::Mat Tcw = mpTracker->GrabImageMonocular(im,timestamp);
+    cv::Mat Tcw = mpTracker->GrabImageMonocular(im, timestamp, mImseg);  // 在此处添加了mimseg // change 12/17 lgj
 
+    // cout << "System::TrackMonocular 5" << endl;
     unique_lock<mutex> lock2(mMutexState);
     mTrackingState = mpTracker->mState;
     mTrackedMapPoints = mpTracker->mCurrentFrame.mvpMapPoints;

@@ -39,7 +39,8 @@ class Frame;
 class MapPoint
 {
 public:
-    MapPoint(const cv::Mat &Pos, KeyFrame* pRefKF, Map* pMap);
+    // MapPoint(const cv::Mat &Pos, KeyFrame* pRefKF, Map* pMap);
+    MapPoint(const cv::Mat &Pos, KeyFrame* pRefKF, Map* pMap, int nLabelNums=19); // change 12/17 lgj 类别数目
     MapPoint(const cv::Mat &Pos,  Map* pMap, Frame* pFrame, const int &idxF);
 
     void SetWorldPos(const cv::Mat &Pos);
@@ -145,6 +146,17 @@ protected:
 
      std::mutex mMutexPos;
      std::mutex mMutexFeatures;
+// chang begin 12/17 lgj
+public:
+    void UpdateSemantic(const unsigned int nSemanticLabel);
+    int GetSemanticLabel();
+    
+//! yonghui add
+protected:
+    vector<long unsigned int> mvSemanticLabels;
+    int mnLabelNums;  // classification number
+    int mnLabel;  // current semantic label
+// chang end 12/17 lgj
 };
 
 } //namespace ORB_SLAM

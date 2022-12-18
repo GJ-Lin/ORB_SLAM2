@@ -23,7 +23,8 @@
 
 #include <vector>
 #include <list>
-#include <opencv/cv.h>
+// #include <opencv/cv.h>
+#include <opencv2/opencv.hpp> // change opencv4 lgj
 
 
 namespace ORB_SLAM2

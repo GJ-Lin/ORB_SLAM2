@@ -31,7 +31,9 @@
 
 using namespace std;
 
-void LoadImages(const string &strSequence, vector<string> &vstrImageFilenames,
+void LoadImages(const string &strSequence, 
+                vector<string> &vstrImageFilenames, 
+                vector<string> &vstrSemanticImage, // change 12/17 lgj
                 vector<double> &vTimestamps);
 
 int main(int argc, char **argv)
@@ -44,11 +46,14 @@ int main(int argc, char **argv)
 
     // Retrieve paths to images
     vector<string> vstrImageFilenames;
+    vector<string> vstrSemanticImage; // change 12/17 lgj
     vector<double> vTimestamps;
-    LoadImages(string(argv[3]), vstrImageFilenames, vTimestamps);
+    // cout << string(argv[3]) << endl;
+    // exit(0);
+    // LoadImages(string(argv[3]), vstrImageFilenames, vTimestamps);
+    LoadImages(string(argv[3]), vstrImageFilenames, vstrSemanticImage, vTimestamps); // change 12/17 lgj
 
     int nImages = vstrImageFilenames.size();
-
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
     ORB_SLAM2::System SLAM(argv[1],argv[2],ORB_SLAM2::System::MONOCULAR,true);
 
@@ -61,11 +66,16 @@ int main(int argc, char **argv)
     cout << "Images in the sequence: " << nImages << endl << endl;
 
     // Main loop
-    cv::Mat im;
+    cv::Mat im, imSeg;
     for(int ni=0; ni<nImages; ni++)
     {
+        // cout << ni << endl;
+        // exit(0);
         // Read image from file
-        im = cv::imread(vstrImageFilenames[ni],CV_LOAD_IMAGE_UNCHANGED);
+        // im = cv::imread(vstrImageFilenames[ni],CV_LOAD_IMAGE_UNCHANGED);
+        im = cv::imread(vstrImageFilenames[ni],cv::IMREAD_UNCHANGED); // fix opencv4 bug lgj
+        imSeg = cv::imread(vstrSemanticImage[ni], cv::IMREAD_UNCHANGED);//读取语义分割后的图片 // change 12/17 lgj
+        
         double tframe = vTimestamps[ni];
 
         if(im.empty())
@@ -79,9 +89,12 @@ int main(int argc, char **argv)
 #else
         std::chrono::monotonic_clock::time_point t1 = std::chrono::monotonic_clock::now();
 #endif
-
         // Pass the image to the SLAM system
-        SLAM.TrackMonocular(im,tframe);
+        // SLAM.TrackMonocular(im, tframe);
+        SLAM.TrackMonocular(im, tframe, imSeg); // change 12/17 lgj
+        // if (ni == 2) {
+        //     cout << "after SLAM" << endl;
+        // }
 
 #ifdef COMPILEDWITHC11
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
@@ -90,7 +103,6 @@ int main(int argc, char **argv)
 #endif
 
         double ttrack= std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count();
-
         vTimesTrack[ni]=ttrack;
 
         // Wait to load the next frame
@@ -102,8 +114,10 @@ int main(int argc, char **argv)
 
         if(ttrack<T)
             usleep((T-ttrack)*1e6);
+
     }
 
+    // cout << "before shutdown" << endl;
     // Stop all threads
     SLAM.Shutdown();
 
@@ -119,12 +133,16 @@ int main(int argc, char **argv)
     cout << "mean tracking time: " << totaltime/nImages << endl;
 
     // Save camera trajectory
-    SLAM.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");    
+    // SLAM.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
+    SLAM.SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory_mono.txt"); // change 12/17 lgj
 
     return 0;
 }
 
-void LoadImages(const string &strPathToSequence, vector<string> &vstrImageFilenames, vector<double> &vTimestamps)
+void LoadImages(const string &strPathToSequence, 
+                vector<string> &vstrImageFilenames, 
+                vector<string> &vstrSemanticImage, // change 12/17 lgj
+                vector<double> &vTimestamps)
 {
     ifstream fTimes;
     string strPathTimeFile = strPathToSequence + "/times.txt";
@@ -143,15 +161,21 @@ void LoadImages(const string &strPathToSequence, vector<string> &vstrImageFilena
         }
     }
 
-    string strPrefixLeft = strPathToSequence + "/image_0/";
+    // string strPrefixLeft = strPathToSequence + "/image_0/";
+
+    string strPrefixLeft = strPathToSequence + "/image_2/"; // change 12/17 lgj
+    //string strPrefixLeft = strPathToSequence + "/sem/color/";
+    string strSemantic=strPathToSequence + "/seg_result/"; // change 12/17 lgj 重点修改
 
     const int nTimes = vTimestamps.size();
     vstrImageFilenames.resize(nTimes);
-
+    vstrSemanticImage.resize(nTimes); // change 12/17 lgj
+    
     for(int i=0; i<nTimes; i++)
     {
         stringstream ss;
         ss << setfill('0') << setw(6) << i;
         vstrImageFilenames[i] = strPrefixLeft + ss.str() + ".png";
+        vstrSemanticImage[i] = strSemantic + ss.str() + ".png"; // change 12/17 lgj 重点修改
     }
 }

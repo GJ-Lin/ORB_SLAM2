@@ -55,6 +55,7 @@
 #include "MapPoint.h"
 #include "Frame.h"
 
+#include <opencv2/imgproc/types_c.h> // change opencv4 lgj
 namespace ORB_SLAM2
 {
 

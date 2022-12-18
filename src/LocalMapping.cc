@@ -24,7 +24,7 @@
 #include "Optimizer.h"
 
 #include<mutex>
-
+#include <unistd.h> // fix timer bug lgj
 namespace ORB_SLAM2
 {
 
@@ -61,7 +61,7 @@ void LocalMapping::Run()
             ProcessNewKeyFrame();
 
             // Check recent MapPoints
-            MapPointCulling();
+            //MapPointCulling();// 关闭地图筛选的功能，不进行地图点的剔除 //change 12/17 lgj
 
             // Triangulate new MapPoints
             CreateNewMapPoints();

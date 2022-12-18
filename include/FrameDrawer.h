@@ -30,6 +30,7 @@
 
 #include<mutex>
 
+#include <opencv2/imgproc/types_c.h> // fix opencv4 bug CV_XXXX lgj
 
 namespace ORB_SLAM2
 {

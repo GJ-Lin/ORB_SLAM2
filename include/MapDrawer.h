@@ -57,6 +57,10 @@ private:
     cv::Mat mCameraPose;
 
     std::mutex mMutexCamera;
+
+//!yonghui add // change 12/17 lgj
+protected:
+    static vector<vector<int> > mvColorMap;
 };
 
 } //namespace ORB_SLAM

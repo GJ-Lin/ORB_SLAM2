@@ -29,11 +29,13 @@ namespace ORB_SLAM2
 long unsigned int MapPoint::nNextId=0;
 mutex MapPoint::mGlobalMutex;
 
-MapPoint::MapPoint(const cv::Mat &Pos, KeyFrame *pRefKF, Map* pMap):
+// MapPoint::MapPoint(const cv::Mat &Pos, KeyFrame *pRefKF, Map* pMap):
+MapPoint::MapPoint(const cv::Mat &Pos, KeyFrame *pRefKF, Map* pMap, int nLabelNums): // change 12/17 lgj
     mnFirstKFid(pRefKF->mnId), mnFirstFrame(pRefKF->mnFrameId), nObs(0), mnTrackReferenceForFrame(0),
     mnLastFrameSeen(0), mnBALocalForKF(0), mnFuseCandidateForKF(0), mnLoopPointForKF(0), mnCorrectedByKF(0),
     mnCorrectedReference(0), mnBAGlobalForKF(0), mpRefKF(pRefKF), mnVisible(1), mnFound(1), mbBad(false),
-    mpReplaced(static_cast<MapPoint*>(NULL)), mfMinDistance(0), mfMaxDistance(0), mpMap(pMap)
+    mpReplaced(static_cast<MapPoint*>(NULL)), mfMinDistance(0), mfMaxDistance(0), mpMap(pMap), // change begin 12/17 lgj
+    mvSemanticLabels(19), mnLabelNums(nLabelNums), mnLabel(-1) // change end 12/17 lgj
 {
     Pos.copyTo(mWorldPos);
     mNormalVector = cv::Mat::zeros(3,1,CV_32F);
@@ -415,7 +417,32 @@ int MapPoint::PredictScale(const float &currentDist, Frame* pF)
 
     return nScale;
 }
+// change begin 12/17 lgj
+void MapPoint::UpdateSemantic(const unsigned int nSemanticLabel)
+{//TODO filter
+    //0-road 1-side walk 2-building 3-wall 8-vegetation 13-car 4-fence
+    //if(nSemanticLabel==2||nSemanticLabel==3||nSemanticLabel==8)
+    if(nSemanticLabel==0||nSemanticLabel==13||nSemanticLabel==2||nSemanticLabel==3||nSemanticLabel==4||nSemanticLabel==8)
+        mvSemanticLabels[nSemanticLabel]++;
+    else
+        mvSemanticLabels[nSemanticLabel]=0;
+    // TODO: Update with probability instead of observations
+    vector<long unsigned int>::iterator vitMaxLabel = max_element(mvSemanticLabels.begin(), mvSemanticLabels.end());
+    // TODO: Filter dynamic semantics
+    if (*vitMaxLabel == 0)//*vitMaxLabel
+    {
+        mnLabel = -1;
+    }
+    else if (mnLabel == -1 || *vitMaxLabel > mvSemanticLabels[mnLabel])  // only observations exceed previous, we will update sementic label
+    {
+        mnLabel = vitMaxLabel - mvSemanticLabels.begin();
+        cout << "Label: " << mnLabel << endl;
+    }
+}
 
-
-
+int MapPoint::GetSemanticLabel()
+{
+    return mnLabel;
+}
+// change end 12/17 lgj
 } //namespace ORB_SLAM

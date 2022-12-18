@@ -30,7 +30,7 @@
 
 #include<mutex>
 #include<thread>
-
+#include <unistd.h> // fix timer bug lgj
 
 namespace ORB_SLAM2
 {

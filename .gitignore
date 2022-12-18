@@ -22,3 +22,6 @@ build/
 *~
 lib/
 
+.vscode/
+tmp.cc
+KeyFrameTrajectory_mono.txt

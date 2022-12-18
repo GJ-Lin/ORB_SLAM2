@@ -168,6 +168,7 @@ void FrameDrawer::Update(Tracking *pTracker)
 {
     unique_lock<mutex> lock(mMutex);
     pTracker->mImGray.copyTo(mIm);
+    //pTracker->mImSeg.copyTo(mIm); //这一句是用来检查是否传入了semantic图片的 //change 12/17 lgj
     mvCurrentKeys=pTracker->mCurrentFrame.mvKeys;
     N = mvCurrentKeys.size();
     mvbVO = vector<bool>(N,false);
