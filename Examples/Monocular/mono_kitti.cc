@@ -75,12 +75,17 @@ int main(int argc, char **argv)
         // im = cv::imread(vstrImageFilenames[ni],CV_LOAD_IMAGE_UNCHANGED);
         im = cv::imread(vstrImageFilenames[ni],cv::IMREAD_UNCHANGED); // fix opencv4 bug lgj
         imSeg = cv::imread(vstrSemanticImage[ni], cv::IMREAD_UNCHANGED);//读取语义分割后的图片 // change 12/17 lgj
-        
+        // cout << "read image " << ni << endl;
         double tframe = vTimestamps[ni];
 
         if(im.empty())
         {
             cerr << endl << "Failed to load image at: " << vstrImageFilenames[ni] << endl;
+            return 1;
+        }
+        if(imSeg.empty())
+        {
+            cerr << endl << "Failed to load image at: " << vstrSemanticImage[ni] << endl;
             return 1;
         }
 
@@ -119,6 +124,7 @@ int main(int argc, char **argv)
 
     // cout << "before shutdown" << endl;
     // Stop all threads
+    SLAM.CreatePCD("pointcloud.pcd");
     SLAM.Shutdown();
 
     // Tracking time statistics

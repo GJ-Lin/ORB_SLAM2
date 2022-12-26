@@ -26,3 +26,4 @@ lib/
 tmp.cc
 KeyFrameTrajectory_mono.txt
 README_origin.md
+pointcloud.pcd

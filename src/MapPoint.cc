@@ -43,6 +43,7 @@ MapPoint::MapPoint(const cv::Mat &Pos, KeyFrame *pRefKF, Map* pMap, int nLabelNu
     // MapPoints can be created from Tracking and Local Mapping. This mutex avoid conflicts with id.
     unique_lock<mutex> lock(mpMap->mMutexPointCreation);
     mnId=nNextId++;
+    rgb = new int[3]; // 12/26 lgj
 }
 
 MapPoint::MapPoint(const cv::Mat &Pos, Map* pMap, Frame* pFrame, const int &idxF):
@@ -422,6 +423,7 @@ void MapPoint::UpdateSemantic(const unsigned int nSemanticLabel)
 {//TODO filter
     //0-road 1-side walk 2-building 3-wall 8-vegetation 13-car 4-fence
     //if(nSemanticLabel==2||nSemanticLabel==3||nSemanticLabel==8)
+    // 根据需要在此修改要识别的语义类别 12/26 lgj
     if(nSemanticLabel==0||nSemanticLabel==13||nSemanticLabel==2||nSemanticLabel==3||nSemanticLabel==4||nSemanticLabel==8)
         mvSemanticLabels[nSemanticLabel]++;
     else
@@ -445,4 +447,17 @@ int MapPoint::GetSemanticLabel()
     return mnLabel;
 }
 // change end 12/17 lgj
+
+// 12/26 lgj
+void MapPoint::SetRGB(int r, int g, int b)
+{
+    rgb[0] = r;
+    rgb[1] = g;
+    rgb[2] = b;
+}
+
+int*  MapPoint::GetRGB()
+{
+    return rgb;
+}
 } //namespace ORB_SLAM

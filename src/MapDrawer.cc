@@ -85,10 +85,15 @@ void MapDrawer::DrawMapPoints()
         if (nLabel == -1)  // no label
         {
             glColor3f(0., 0., 0.);
+            vpMPs[i]->SetRGB(0, 0, 0);
         }
         else
         {
             glColor3f((float)mvColorMap[nLabel][0]/255., (float)mvColorMap[nLabel][1]/255., (float)mvColorMap[nLabel][2]/255.);
+            vpMPs[i]->SetRGB(mvColorMap[nLabel][0], mvColorMap[nLabel][1], mvColorMap[nLabel][2]);
+            // cout << mvColorMap[nLabel] << endl;
+            // cout << mvColorMap[nLabel][0] << " " << mvColorMap[nLabel][1] << " " << mvColorMap[nLabel][2] << endl;
+            // cout << mvColorMap[nLabel][0] << " " << mvColorMap[nLabel][1] << " " << mvColorMap[nLabel][2] << endl;
         } // change end 12/17 lgj
         cv::Mat pos = vpMPs[i]->GetWorldPos();
         glVertex3f(pos.at<float>(0),pos.at<float>(1),pos.at<float>(2));

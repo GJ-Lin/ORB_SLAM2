@@ -46,6 +46,7 @@ public:
     void SetWorldPos(const cv::Mat &Pos);
     cv::Mat GetWorldPos();
 
+
     cv::Mat GetNormal();
     KeyFrame* GetReferenceKeyFrame();
 
@@ -157,6 +158,11 @@ protected:
     int mnLabelNums;  // classification number
     int mnLabel;  // current semantic label
 // chang end 12/17 lgj
+
+public: // 12/26 lgj
+    int* rgb;
+    void SetRGB(int r, int g, int b);
+    int* GetRGB();
 };
 
 } //namespace ORB_SLAM

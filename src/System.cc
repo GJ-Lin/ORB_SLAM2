@@ -505,4 +505,55 @@ vector<cv::KeyPoint> System::GetTrackedKeyPointsUn()
     return mTrackedKeyPointsUn;
 }
 
+void System::CreatePCD(const string &filename)
+{
+    cout << endl
+         << "Saving map points to " << filename << " ..." << endl;
+    vector<MapPoint *> vMPs = mpMap->GetAllMapPoints();
+    // create pcd initialization string
+    std::string begin = std::string("# .PCD v.7 - Point Cloud Data file format\nVERSION .7\n");
+    // add the fields:
+    begin += "FIELDS x y z rgb\n";
+    // add the size (4 for float):
+    begin += "SIZE 4 4 4 4\n";
+    // add the type:
+    begin += "TYPE F F F U\n";
+    // add the count(ammount of dimension (1 for x)):
+    begin += "COUNT 1 1 1 1\n";
+    // add the width:
+    int width = vMPs.size();
+    begin += "WIDTH ";
+    begin += std::to_string(width);
+    // add the height:
+    begin += "\nHEIGHT 1\n";
+    // add the viewpoint:
+    begin += "VIEWPOINT 0 0 0 1 0 0 0\n";
+    // add the amount of points:
+    begin += "POINTS ";
+    begin += std::to_string(width);
+    // add the datatype:
+    begin += "\nDATA ascii\n";
+    // open the file
+    ofstream f;
+    f.open(filename.c_str());
+    // write the begin
+    f << begin;
+    // write the points
+    for (size_t i = 0; i < vMPs.size(); i++)
+    {
+        MapPoint *pMP = vMPs[i];
+        if (pMP->isBad())
+            continue;
+        cv::Mat MPPositions = pMP->GetWorldPos();
+        int* rgb = pMP->GetRGB();
+        // cout << rgb[0] << " " << rgb[1] << " " << rgb[2] << endl;
+        unsigned int rgbsaved = rgb[0] << 16 | rgb[1] << 8 | rgb[2] | 1 << 24;
+        // cv::Mat MPColor = pMP->GetRGB();
+        // static unsigned long rgb = 255 << 16 | 0 << 8 | 0 | 1 << 24;
+        f << setprecision(7) << MPPositions.at<float>(0) << " " << MPPositions.at<float>(1) << " " << MPPositions.at<float>(2) << " " << rgbsaved << endl;
+    }
+    f.close();
+    cout << endl
+         << "Map Points saved!" << endl;
+}
 } //namespace ORB_SLAM
